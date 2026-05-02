@@ -3,13 +3,15 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: KonbiniCompare API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: konbini
+    description: KonbiniCompare product comparison operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,81 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /categories:
+    get:
+      operationId: getCategories
+      tags: [konbini]
+      summary: Get product categories
+      description: Returns list of supported product categories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoriesResponse"
+
+  /demo-products:
+    get:
+      operationId: getDemoProducts
+      tags: [konbini]
+      summary: Get demo products
+      description: Returns seeded demo products, optionally filtered by category
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of demo products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoProductsResponse"
+
+  /compare-products:
+    post:
+      operationId: compareProducts
+      tags: [konbini]
+      summary: Compare products
+      description: Run deterministic scoring and return ranked results with bilingual explanation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompareProductsBody"
+      responses:
+        "200":
+          description: Comparison results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompareProductsResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /demo-scenarios:
+    get:
+      operationId: getDemoScenarios
+      tags: [konbini]
+      summary: Get prebuilt demo scenarios
+      description: Returns prebuilt comparison scenarios for quick demo
+      responses:
+        "200":
+          description: List of demo scenarios
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoScenariosResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +111,394 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+      required:
+        - error
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Category identifier (e.g. "drinks", "snacks")
+        name:
+          type: string
+          description: Display name in English
+        nameJa:
+          type: string
+          description: Display name in Japanese
+        icon:
+          type: string
+          description: Emoji icon
+        scoringDimensions:
+          type: array
+          items:
+            type: string
+          description: Which scoring dimensions apply to this category
+      required:
+        - id
+        - name
+        - nameJa
+        - icon
+        - scoringDimensions
+
+    CategoriesResponse:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+      required:
+        - categories
+
+    ProductNutrition:
+      type: object
+      properties:
+        calories:
+          type: number
+          nullable: true
+        protein:
+          type: number
+          nullable: true
+        fat:
+          type: number
+          nullable: true
+        carbs:
+          type: number
+          nullable: true
+        sugar:
+          type: number
+          nullable: true
+        sodium:
+          type: number
+          nullable: true
+        caffeine:
+          type: number
+          nullable: true
+        fiber:
+          type: number
+          nullable: true
+
+    ProductSkincare:
+      type: object
+      properties:
+        spf:
+          type: number
+          nullable: true
+        fragranceFree:
+          type: boolean
+          nullable: true
+        alcoholFree:
+          type: boolean
+          nullable: true
+        irritationRisk:
+          type: string
+          nullable: true
+          description: "low | medium | high"
+        keyIngredients:
+          type: array
+          items:
+            type: string
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        nameJa:
+          type: string
+          nullable: true
+        brand:
+          type: string
+          nullable: true
+        category:
+          type: string
+        store:
+          type: string
+          nullable: true
+          description: "7-Eleven | FamilyMart | Lawson | Supermarket | Drugstore | etc."
+        priceJpy:
+          type: number
+          nullable: true
+        volumeMl:
+          type: number
+          nullable: true
+        weightG:
+          type: number
+          nullable: true
+        servings:
+          type: number
+          nullable: true
+        nutrition:
+          $ref: "#/components/schemas/ProductNutrition"
+          nullable: true
+        skincare:
+          $ref: "#/components/schemas/ProductSkincare"
+          nullable: true
+        allergens:
+          type: array
+          items:
+            type: string
+        additives:
+          type: array
+          items:
+            type: string
+        imageUrl:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - name
+        - category
+        - allergens
+        - additives
+        - tags
+
+    DemoProductsResponse:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        total:
+          type: integer
+      required:
+        - products
+        - total
+
+    UserPreferences:
+      type: object
+      properties:
+        budgetSensitivity:
+          type: number
+          description: "0.0 to 1.0 — how important is price"
+          default: 0.5
+        nutritionPriority:
+          type: number
+          description: "0.0 to 1.0 — how important is nutritional quality"
+          default: 0.5
+        caffeineSensitivity:
+          type: number
+          description: "0.0 to 1.0 — how sensitive to caffeine (higher = prefer less caffeine)"
+          default: 0.3
+        allergenConcerns:
+          type: array
+          items:
+            type: string
+          description: Allergens to flag (e.g. gluten, dairy, nuts)
+        ingredientSimplicity:
+          type: number
+          description: "0.0 to 1.0 — prefer fewer/simpler additives"
+          default: 0.3
+        valueForMoney:
+          type: number
+          description: "0.0 to 1.0 — how important is volume/weight per yen"
+          default: 0.5
+        convenience:
+          type: number
+          description: "0.0 to 1.0 — prefer portable/single-serve options"
+          default: 0.3
+        skinSensitivity:
+          type: number
+          description: "0.0 to 1.0 — prefer low-irritation skincare (skincare category only)"
+          default: 0.5
+        proteinPriority:
+          type: number
+          description: "0.0 to 1.0 — how important is protein content"
+          default: 0.3
+        sugarAvoidance:
+          type: number
+          description: "0.0 to 1.0 — prefer low-sugar options"
+          default: 0.3
+      required: []
+
+    ScoreBreakdown:
+      type: object
+      properties:
+        price:
+          type: number
+          nullable: true
+        valueForMoney:
+          type: number
+          nullable: true
+        caffeine:
+          type: number
+          nullable: true
+        calories:
+          type: number
+          nullable: true
+        sugar:
+          type: number
+          nullable: true
+        protein:
+          type: number
+          nullable: true
+        additives:
+          type: number
+          nullable: true
+        allergenSafety:
+          type: number
+          nullable: true
+        skinSafety:
+          type: number
+          nullable: true
+        convenience:
+          type: number
+          nullable: true
+        missingDataPenalty:
+          type: number
+          nullable: true
+
+    RankedResult:
+      type: object
+      properties:
+        rank:
+          type: integer
+        productId:
+          type: string
+        productName:
+          type: string
+        score:
+          type: number
+          description: "0.0 to 1.0 weighted total score"
+        scoreBreakdown:
+          $ref: "#/components/schemas/ScoreBreakdown"
+        strengths:
+          type: array
+          items:
+            type: string
+        tradeoffs:
+          type: array
+          items:
+            type: string
+        cautions:
+          type: array
+          items:
+            type: string
+        missingFields:
+          type: array
+          items:
+            type: string
+        isBestMatch:
+          type: boolean
+      required:
+        - rank
+        - productId
+        - productName
+        - score
+        - scoreBreakdown
+        - strengths
+        - tradeoffs
+        - cautions
+        - missingFields
+        - isBestMatch
+
+    CompareProductsBody:
+      type: object
+      properties:
+        category:
+          type: string
+        productIds:
+          type: array
+          items:
+            type: string
+          minItems: 2
+          maxItems: 5
+          description: IDs of products from demo catalog to compare
+        preferences:
+          $ref: "#/components/schemas/UserPreferences"
+      required:
+        - category
+        - productIds
+
+    CompareProductsResponse:
+      type: object
+      properties:
+        category:
+          type: string
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        rankedResults:
+          type: array
+          items:
+            $ref: "#/components/schemas/RankedResult"
+        bestMatch:
+          type: string
+          description: Product name of the top-ranked product
+        summaryJa:
+          type: string
+          description: Japanese summary explanation
+        summaryEn:
+          type: string
+          description: English summary explanation
+        comparisonTable:
+          type: object
+          additionalProperties: true
+          description: Field-by-field comparison matrix
+        processingMode:
+          type: string
+          description: "mock | live | fallback"
+        preferences:
+          $ref: "#/components/schemas/UserPreferences"
+      required:
+        - category
+        - products
+        - rankedResults
+        - bestMatch
+        - summaryJa
+        - summaryEn
+        - comparisonTable
+        - processingMode
+
+    DemoScenario:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        titleJa:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        productIds:
+          type: array
+          items:
+            type: string
+        preferences:
+          $ref: "#/components/schemas/UserPreferences"
+      required:
+        - id
+        - title
+        - titleJa
+        - description
+        - category
+        - productIds
+
+    DemoScenariosResponse:
+      type: object
+      properties:
+        scenarios:
+          type: array
+          items:
+            $ref: "#/components/schemas/DemoScenario"
+      required:
+        - scenarios

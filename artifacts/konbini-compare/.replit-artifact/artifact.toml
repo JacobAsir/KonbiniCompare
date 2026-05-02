@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "KonbiniCompare"
+version = "1.0.0"
+id = "artifacts/konbini-compare"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20084
+
+[services.development]
+run = "pnpm --filter @workspace/konbini-compare run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/konbini-compare", "run", "build" ]
+publicDir = "artifacts/konbini-compare/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20084"
+BASE_PATH = "/"
