@@ -1,6 +1,6 @@
 import type { Product } from "./types.js";
 
-export const DEMO_PRODUCTS: Product[] = [
+export const PRODUCTS: Product[] = [
   // ─── DRINKS ──────────────────────────────────────────────────────────────
   {
     id: "drink-001",
@@ -840,9 +840,30 @@ export const DEMO_PRODUCTS: Product[] = [
 ];
 
 export function getProductById(id: string): Product | undefined {
-  return DEMO_PRODUCTS.find((p) => p.id === id);
+  return PRODUCTS.find((p) => p.id === id);
 }
 
 export function getProductsByCategory(category: string): Product[] {
-  return DEMO_PRODUCTS.filter((p) => p.category === category);
+  return PRODUCTS.filter((p) => p.category === category);
+}
+
+export function searchProducts(query: string, limit = 10): Product[] {
+  const q = query.toLowerCase().trim();
+  if (!q) return [];
+
+  return PRODUCTS
+    .filter((p) => {
+      const searchable = [
+        p.name,
+        p.nameJa ?? "",
+        p.brand ?? "",
+        p.category,
+        p.store ?? "",
+        ...p.tags,
+      ]
+        .join(" ")
+        .toLowerCase();
+      return searchable.includes(q);
+    })
+    .slice(0, limit);
 }

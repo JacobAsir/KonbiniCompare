@@ -102,12 +102,3 @@ export interface Category {
   scoringDimensions: string[];
 }
 
-export interface DemoScenario {
-  id: string;
-  title: string;
-  titleJa: string;
-  description: string;
-  category: string;
-  productIds: string[];
-  preferences: Partial<UserPreferences>;
-}

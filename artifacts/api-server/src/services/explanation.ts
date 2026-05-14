@@ -8,7 +8,7 @@
  * - All product data passed to the LLM comes from the actual product fixtures.
  */
 
-import { openai } from "@workspace/integrations-openai-ai-server";
+import { groq, GROQ_LLAMA_MODEL } from "@workspace/integrations-groq-server";
 import type { Product, RankedResult, UserPreferences } from "./types.js";
 import { logger } from "../lib/logger.js";
 
@@ -70,9 +70,9 @@ export async function generateExplanation(
 ): Promise<ExplanationOutput> {
   const { category, rankedResults, products, preferences } = input;
 
-  // Guard: only call LLM if key is available and not dummy
-  const baseUrl = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
-  if (!baseUrl) {
+  // Guard: only call LLM if key is available
+  if (!process.env.GROQ_API_KEY) {
+    logger.info("GROQ_API_KEY not found, using fallback");
     return buildFallback(rankedResults, products, category);
   }
 
@@ -123,20 +123,14 @@ Rules:
 - Do not include headers or labels`;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-5.1",
-      max_completion_tokens: 600,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a bilingual Japanese-English consumer product comparison assistant. You explain rankings clearly and factually.",
-        },
-        { role: "user", content: prompt },
-      ],
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: GROQ_LLAMA_MODEL,
+      temperature: 0.2,
+      max_tokens: 1024,
     });
 
-    const text = response.choices[0]?.message?.content ?? "";
+    const text = chatCompletion.choices[0]?.message?.content || "";
     const parts = text.split("---");
 
     if (parts.length >= 2) {
@@ -147,14 +141,13 @@ Rules:
       };
     }
 
-    // Fallback if format is unexpected
     return {
       summaryJa: text.trim(),
       summaryEn: text.trim(),
       processingMode: "live",
     };
   } catch (err) {
-    logger.warn({ err }, "LLM explanation failed, using fallback");
+    logger.warn({ err }, "Groq explanation failed, using fallback");
     return buildFallback(rankedResults, products, category);
   }
 }
