@@ -79,7 +79,8 @@ export default function Result() {
     setLoading(true);
     setError(null);
 
-    fetch("/api/quick-compare", {
+    const baseUrl = import.meta.env.VITE_API_URL || "";
+    fetch(`${baseUrl}/api/quick-compare`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
