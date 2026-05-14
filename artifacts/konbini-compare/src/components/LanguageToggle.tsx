@@ -31,7 +31,7 @@ export default function LanguageToggle() {
             : "text-muted-foreground hover:text-foreground"
         }`}
       >
-        JA
+        JP
       </button>
     </div>
   );
