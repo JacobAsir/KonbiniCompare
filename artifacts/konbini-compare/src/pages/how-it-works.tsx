@@ -1,133 +1,213 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLang } from "@/lib/LanguageContext";
+import {
+  Search,
+  ScanBarcode,
+  Database,
+  Sparkles,
+  Wallet,
+  Heart,
+  Leaf,
+  Scale,
+} from "lucide-react";
+import type { TranslationKey } from "@/lib/i18n";
 
-const DIMENSIONS = [
-  {
-    key: "price",
-    label: "Price",
-    labelJa: "価格",
-    desc: "Lower absolute price scores higher. Products are compared relative to each other.",
-  },
-  {
-    key: "valueForMoney",
-    label: "Value for Money",
-    labelJa: "コスパ",
-    desc: "Volume or weight (ml or g) divided by price. More per yen = higher score.",
-  },
-  {
-    key: "caffeine",
-    label: "Caffeine",
-    labelJa: "カフェイン",
-    desc: "Lower caffeine scores higher when caffeine sensitivity is enabled.",
-  },
-  {
-    key: "calories",
-    label: "Calories",
-    labelJa: "カロリー",
-    desc: "Fewer calories per serving = higher score. Weighted by nutrition priority.",
-  },
-  {
-    key: "sugar",
-    label: "Sugar",
-    labelJa: "糖分",
-    desc: "Less sugar per serving = higher score. Weighted by sugar avoidance preference.",
-  },
-  {
-    key: "protein",
-    label: "Protein",
-    labelJa: "たんぱく質",
-    desc: "More protein = higher score. Weighted by protein priority preference.",
-  },
-  {
-    key: "additives",
-    label: "Additives",
-    labelJa: "添加物",
-    desc: "Fewer additives = higher score. Products with zero additives score 1.0.",
-  },
-  {
-    key: "allergenSafety",
-    label: "Allergen Safety",
-    labelJa: "アレルゲン安全性",
-    desc: "Products containing your flagged allergens score 0.0. Clean products score 1.0. Only weighted when you list allergen concerns.",
-  },
-  {
-    key: "skinSafety",
-    label: "Skin Safety",
-    labelJa: "肌安全性",
-    desc: "Combines irritation risk (low/medium/high), fragrance-free, and alcohol-free status. Only applies to skincare products.",
-  },
-  {
-    key: "convenience",
-    label: "Convenience",
-    labelJa: "携帯性",
-    desc: "Single-serve and small-volume products score higher. Weighted by convenience preference.",
-  },
+const USER_STEPS: Array<{
+  num: string;
+  labelKey: TranslationKey;
+  descKey: TranslationKey;
+  icon: typeof Search;
+}> = [
+  { num: "1", labelKey: "hiwStep1", descKey: "hiwStep1Desc", icon: Search },
+  { num: "2", labelKey: "hiwStep2", descKey: "hiwStep2Desc", icon: Database },
+  { num: "3", labelKey: "hiwStep3", descKey: "hiwStep3Desc", icon: Sparkles },
 ];
 
-const STEPS = [
+const PROFILES: Array<{
+  labelKey: TranslationKey;
+  shortKey: TranslationKey;
+  icon: typeof Wallet;
+  color: string;
+}> = [
+  { labelKey: "profileBudget", shortKey: "hiwProfileBudgetShort", icon: Wallet, color: "text-green-600" },
+  { labelKey: "profileHealth", shortKey: "hiwProfileHealthShort", icon: Heart, color: "text-red-500" },
+  { labelKey: "profileClean", shortKey: "hiwProfileCleanShort", icon: Leaf, color: "text-emerald-600" },
+  { labelKey: "profileBalanced", shortKey: "hiwProfileBalancedShort", icon: Scale, color: "text-blue-600" },
+];
+
+const ENGINE_STEPS: Array<{ num: string; labelKey: TranslationKey; descKey: TranslationKey }> = [
+  { num: "01", labelKey: "hiwEng1", descKey: "hiwEng1Desc" },
+  { num: "02", labelKey: "hiwEng2", descKey: "hiwEng2Desc" },
+  { num: "03", labelKey: "hiwEng3", descKey: "hiwEng3Desc" },
+  { num: "04", labelKey: "hiwEng4", descKey: "hiwEng4Desc" },
+  { num: "05", labelKey: "hiwEng5", descKey: "hiwEng5Desc" },
+];
+
+// Scoring dimensions with bilingual descriptions
+const DIM_DETAILS = [
   {
-    num: "01",
-    label: "Normalise",
-    desc: "All raw product values (price, caffeine, sugar, etc.) are collected for the selected products and normalised together using min-max scaling so the best product on each dimension gets 1.0 and the worst gets 0.0.",
+    labelKey: "dimPrice" as TranslationKey,
+    en: "Lower absolute price scores higher. Products are compared relative to each other in the set.",
+    ja: "絶対的な価格が低いほど高スコア。同じセット内で相対的に比較されます。",
   },
   {
-    num: "02",
-    label: "Weight",
-    desc: "Each normalised dimension score is multiplied by the user-set preference weight (0–1). A weight of 0 means the dimension is ignored entirely. Allergen safety receives a weight of 1.0 if any allergens are listed.",
+    labelKey: "dimValueForMoney" as TranslationKey,
+    en: "Volume or weight (ml or g) divided by price. More quantity per yen = higher score.",
+    ja: "容量または重さ (ml または g) を価格で割った値。円あたりの量が多いほど高スコア。",
   },
   {
-    num: "03",
-    label: "Aggregate",
-    desc: "The weighted sum of all dimension scores is divided by the sum of their weights to produce a final score in [0, 1]. Products with more missing data receive a small automatic penalty.",
+    labelKey: "dimCaffeine" as TranslationKey,
+    en: "Lower caffeine scores higher when caffeine sensitivity is active (Health profile).",
+    ja: "カフェイン感度がオン (健康プロフィール) のとき、カフェインが少ないほど高スコア。",
   },
   {
-    num: "04",
-    label: "Rank",
-    desc: "Products are sorted by descending final score. Ties are broken alphabetically to ensure the ranking is always deterministic and reproducible.",
+    labelKey: "dimCalories" as TranslationKey,
+    en: "Fewer calories per serving = higher score. Weighted heavily by the Health profile.",
+    ja: "1食あたりのカロリーが少ないほど高スコア。健康プロフィールで重要視されます。",
   },
   {
-    num: "05",
-    label: "Explain",
-    desc: "After ranking, the data is passed to an LLM (OpenAI) which generates a bilingual (Japanese + English) natural-language explanation grounded in the actual product fields. The LLM cannot change the ranking.",
+    labelKey: "dimSugar" as TranslationKey,
+    en: "Less sugar per serving = higher score. Strong factor in Health profile.",
+    ja: "1食あたりの糖分が少ないほど高スコア。健康プロフィールで重要な要素。",
+  },
+  {
+    labelKey: "dimProtein" as TranslationKey,
+    en: "More protein = higher score. Boosted by the Health profile.",
+    ja: "たんぱく質が多いほど高スコア。健康プロフィールで強化されます。",
+  },
+  {
+    labelKey: "dimAdditives" as TranslationKey,
+    en: "Fewer additives = higher score. Near-perfect weight in the Clean Ingredients profile.",
+    ja: "添加物が少ないほど高スコア。成分重視プロフィールではほぼ最大の重み。",
+  },
+  {
+    labelKey: "dimAllergenSafety" as TranslationKey,
+    en: "Products containing your flagged allergens score 0.0. Clean products score 1.0. Only weighted when you list allergen concerns in your profile.",
+    ja: "設定したアレルゲンを含む商品は 0.0、含まない商品は 1.0。プロフィールでアレルゲンを指定した場合のみ適用されます。",
+  },
+  {
+    labelKey: "dimSkinSafety" as TranslationKey,
+    en: "Combines irritation risk (low/medium/high), fragrance-free, and alcohol-free status. Only applies to skincare products.",
+    ja: "刺激リスク (低/中/高)・無香料・アルコールフリーを組み合わせて評価。スキンケア商品のみに適用。",
+  },
+  {
+    labelKey: "dimConvenience" as TranslationKey,
+    en: "Single-serve and small-volume products score higher. Useful for on-the-go decisions.",
+    ja: "個食・小容量の商品ほど高スコア。外出先での判断に便利です。",
   },
 ];
 
 export default function HowItWorks() {
+  const { lang, t } = useLang();
+
   return (
-    <div className="max-w-3xl mx-auto space-y-12">
+    <div className="max-w-3xl mx-auto space-y-12 pb-12">
       <div className="space-y-3">
-        <h1 className="text-3xl font-bold">How Scoring Works</h1>
-        <p className="text-muted-foreground text-lg">
-          スコアリングの仕組み
-        </p>
-        <p className="text-muted-foreground">
-          KonbiniCompare uses a fully deterministic scoring engine. The ranking is always based on real product data and your explicit preference weights — never on AI guesswork.
-        </p>
+        <h1 className="text-3xl font-bold">{t("hiwHeading")}</h1>
+        <p className="text-muted-foreground">{t("hiwIntro")}</p>
       </div>
+
+      {/* For Users */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-bold">{t("hiwForUsers")}</h2>
+        <div className="space-y-3">
+          {USER_STEPS.map(({ num, labelKey, descKey, icon: Icon }) => (
+            <Card key={num}>
+              <CardContent className="p-5 flex gap-4">
+                <div className="shrink-0 w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-muted-foreground">
+                      {lang === "ja" ? `ステップ${num}` : `Step ${num}`}
+                    </span>
+                    <span className="font-semibold">{t(labelKey)}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">{t(descKey)}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Data sources */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-bold">{t("hiwDataSources")}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Card className="border-emerald-200 bg-emerald-50/30">
+            <CardContent className="p-5 space-y-2">
+              <div className="flex items-center gap-2">
+                <Database className="h-4 w-4 text-emerald-700" />
+                <h3 className="font-semibold text-sm">{t("hiwCurated")}</h3>
+              </div>
+              <p className="text-xs text-muted-foreground">{t("hiwCuratedDesc")}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-blue-200 bg-blue-50/30">
+            <CardContent className="p-5 space-y-2">
+              <div className="flex items-center gap-2">
+                <Database className="h-4 w-4 text-blue-700" />
+                <h3 className="font-semibold text-sm">{t("hiwOFF")}</h3>
+              </div>
+              <p className="text-xs text-muted-foreground">{t("hiwOFFDesc")}</p>
+            </CardContent>
+          </Card>
+        </div>
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="p-4 flex gap-3">
+            <ScanBarcode className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-sm">{t("hiwBarcodeTitle")}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("hiwBarcodeDesc")}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Profiles */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-bold">{t("hiwProfileSystem")}</h2>
+        <p className="text-sm text-muted-foreground">{t("hiwProfileIntro")}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {PROFILES.map(({ labelKey, shortKey, icon: Icon, color }) => (
+            <Card key={labelKey}>
+              <CardContent className="p-5 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Icon className={`h-5 w-5 ${color}`} />
+                  <span className="font-semibold">{t(labelKey)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">{t(shortKey)}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">{t("hiwProfileAllergenNote")}</p>
+      </section>
 
       {/* Core principle */}
       <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-6">
-          <p className="font-semibold text-sm">Core principle: The AI explains, the engine decides.</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            The LLM is only used to generate natural-language summaries after the ranking is complete. It cannot invent product facts, change scores, or alter the ranking in any way.
-          </p>
+        <CardContent className="pt-6 space-y-2">
+          <p className="font-semibold">{t("hiwCorePrinciple")}</p>
+          <p className="text-sm text-muted-foreground">{t("hiwCorePrincipleDesc")}</p>
         </CardContent>
       </Card>
 
-      {/* Steps */}
+      {/* Engine steps */}
       <section className="space-y-4">
-        <h2 className="text-xl font-bold">Scoring Process</h2>
+        <h2 className="text-2xl font-bold">{t("hiwEngineTitle")}</h2>
         <div className="space-y-3">
-          {STEPS.map((step) => (
+          {ENGINE_STEPS.map((step) => (
             <div key={step.num} className="flex gap-4">
               <div className="shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
                 {step.num}
               </div>
               <div className="pt-1.5">
-                <div className="font-semibold">{step.label}</div>
-                <p className="text-sm text-muted-foreground mt-0.5">{step.desc}</p>
+                <div className="font-semibold">{t(step.labelKey)}</div>
+                <p className="text-sm text-muted-foreground mt-0.5">{t(step.descKey)}</p>
               </div>
             </div>
           ))}
@@ -136,17 +216,16 @@ export default function HowItWorks() {
 
       {/* Dimensions */}
       <section className="space-y-4">
-        <h2 className="text-xl font-bold">Scoring Dimensions</h2>
+        <h2 className="text-2xl font-bold">{t("hiwDimensionsTitle")}</h2>
+        <p className="text-sm text-muted-foreground">{t("hiwDimensionsIntro")}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {DIMENSIONS.map((d) => (
-            <Card key={d.key}>
+          {DIM_DETAILS.map(({ labelKey, en, ja }) => (
+            <Card key={labelKey}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">
-                  {d.label} <span className="text-muted-foreground font-normal">{d.labelJa}</span>
-                </CardTitle>
+                <CardTitle className="text-sm">{t(labelKey)}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-xs text-muted-foreground">{d.desc}</p>
+                <p className="text-xs text-muted-foreground">{lang === "ja" ? ja : en}</p>
               </CardContent>
             </Card>
           ))}
@@ -156,24 +235,32 @@ export default function HowItWorks() {
       {/* Missing data */}
       <Card className="border-muted">
         <CardHeader>
-          <CardTitle className="text-base">Missing Data / データ不足について</CardTitle>
+          <CardTitle className="text-base">{t("hiwMissingDataTitle")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>
-            When a product's fields are missing (e.g. sugar content not listed), that dimension is excluded from scoring for all products — it is not set to zero, which would unfairly penalise the product.
-          </p>
-          <p>
-            Each missing critical field applies a small penalty (-4%) to the final score, and all missing fields are listed clearly in the results so you can make an informed decision.
-          </p>
+          <p>{t("hiwMissingData1")}</p>
+          <p>{t("hiwMissingData2")}</p>
+          <p>{t("hiwMissingData3")}</p>
+        </CardContent>
+      </Card>
+
+      {/* Privacy */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t("hiwPrivacyTitle")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-muted-foreground">
+          <p>{t("hiwPrivacy1")}</p>
+          <p>{t("hiwPrivacy2")}</p>
         </CardContent>
       </Card>
 
       <div className="flex gap-3">
-        <Link href="/compare">
-          <Button>Try a Comparison</Button>
+        <Link href="/">
+          <Button>{t("hiwTryButton")}</Button>
         </Link>
-        <Link href="/demo">
-          <Button variant="outline">Browse Demo Scenarios</Button>
+        <Link href="/profile">
+          <Button variant="outline">{t("hiwProfileButton")}</Button>
         </Link>
       </div>
     </div>
