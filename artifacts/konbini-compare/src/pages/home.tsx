@@ -52,7 +52,8 @@ export default function Home() {
     setIsSearching(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const baseUrl = import.meta.env.VITE_API_URL || "";
+        const res = await fetch(`${baseUrl}/api/search?q=${encodeURIComponent(query)}`);
         const data = await res.json();
         setResults(data.products ?? []);
       } catch {
@@ -97,7 +98,8 @@ export default function Home() {
     setShowScanner(false);
     setScanLoading(true);
     try {
-      const res = await fetch(`/api/barcode/${barcode}`);
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const res = await fetch(`${baseUrl}/api/barcode/${barcode}`);
       if (res.ok) {
         const data = await res.json();
         if (data.product) addProduct(data.product);

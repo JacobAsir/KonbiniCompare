@@ -848,8 +848,8 @@ export function getProductsByCategory(category: string): Product[] {
 }
 
 export function searchProducts(query: string, limit = 10): Product[] {
-  const q = query.toLowerCase().trim();
-  if (!q) return [];
+  const terms = q.split(/\s+/).filter(Boolean);
+  if (terms.length === 0) return [];
 
   return PRODUCTS
     .filter((p) => {
@@ -863,7 +863,9 @@ export function searchProducts(query: string, limit = 10): Product[] {
       ]
         .join(" ")
         .toLowerCase();
-      return searchable.includes(q);
+      
+      // All terms must be found in the searchable string
+      return terms.every(term => searchable.includes(term));
     })
     .slice(0, limit);
 }
