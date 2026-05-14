@@ -71,7 +71,7 @@ export interface Product {
   tags: string[];
 }
 
-export interface DemoProductsResponse {
+export interface ProductsResponse {
   products: Product[];
   total: number;
 }
@@ -160,20 +160,6 @@ export interface CompareProductsResponse {
   preferences?: UserPreferences;
 }
 
-export interface DemoScenario {
-  id: string;
-  title: string;
-  titleJa: string;
-  description: string;
-  category: string;
-  productIds: string[];
-  preferences?: UserPreferences;
-}
-
-export interface DemoScenariosResponse {
-  scenarios: DemoScenario[];
-}
-
-export type GetDemoProductsParams = {
+export type GetProductsParams = {
   category?: string;
 };

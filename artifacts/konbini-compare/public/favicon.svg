@@ -1,3 +1,28 @@
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <!-- Transparent background, no square -->
+
+  <!-- Onigiri body: rounded triangle -->
+  <path d="M90 22
+           L156 138
+           Q160 150 148 150
+           L32 150
+           Q20 150 24 138 Z"
+        fill="#FFFFFF"
+        stroke="#1F1B16"
+        stroke-width="8"
+        stroke-linejoin="round"/>
+
+  <!-- Nori seaweed band -->
+  <path d="M40 114
+           L140 114
+           L140 150
+           L40 150 Z"
+        fill="#1F1B16"/>
+
+  <!-- Umeboshi (pickled plum) accent -->
+  <circle cx="90" cy="74" r="11" fill="#E63946"/>
+
+  <!-- Sparkle accent for the "compare" feel -->
+  <path d="M130 48 L132 54 L138 56 L132 58 L130 64 L128 58 L122 56 L128 54 Z"
+        fill="#FF3C00"/>
 </svg>

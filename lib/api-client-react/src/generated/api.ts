@@ -20,11 +20,10 @@ import type {
   CategoriesResponse,
   CompareProductsBody,
   CompareProductsResponse,
-  DemoProductsResponse,
-  DemoScenariosResponse,
   ErrorResponse,
-  GetDemoProductsParams,
+  GetProductsParams,
   HealthStatus,
+  ProductsResponse,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -189,10 +188,10 @@ export function useGetCategories<
 }
 
 /**
- * Returns seeded demo products, optionally filtered by category
- * @summary Get demo products
+ * Returns products, optionally filtered by category
+ * @summary Get products
  */
-export const getGetDemoProductsUrl = (params?: GetDemoProductsParams) => {
+export const getGetProductsUrl = (params?: GetProductsParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -204,32 +203,32 @@ export const getGetDemoProductsUrl = (params?: GetDemoProductsParams) => {
   const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0
-    ? `/api/demo-products?${stringifiedParams}`
-    : `/api/demo-products`;
+    ? `/api/products?${stringifiedParams}`
+    : `/api/products`;
 };
 
-export const getDemoProducts = async (
-  params?: GetDemoProductsParams,
+export const getProducts = async (
+  params?: GetProductsParams,
   options?: RequestInit,
-): Promise<DemoProductsResponse> => {
-  return customFetch<DemoProductsResponse>(getGetDemoProductsUrl(params), {
+): Promise<ProductsResponse> => {
+  return customFetch<ProductsResponse>(getGetProductsUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetDemoProductsQueryKey = (params?: GetDemoProductsParams) => {
-  return [`/api/demo-products`, ...(params ? [params] : [])] as const;
+export const getGetProductsQueryKey = (params?: GetProductsParams) => {
+  return [`/api/products`, ...(params ? [params] : [])] as const;
 };
 
-export const getGetDemoProductsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getDemoProducts>>,
+export const getGetProductsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProducts>>,
   TError = ErrorType<unknown>,
 >(
-  params?: GetDemoProductsParams,
+  params?: GetProductsParams,
   options?: {
     query?: UseQueryOptions<
-      Awaited<ReturnType<typeof getDemoProducts>>,
+      Awaited<ReturnType<typeof getProducts>>,
       TError,
       TData
     >;
@@ -238,43 +237,43 @@ export const getGetDemoProductsQueryOptions = <
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetDemoProductsQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getGetProductsQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDemoProducts>>> = ({
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProducts>>> = ({
     signal,
-  }) => getDemoProducts(params, { signal, ...requestOptions });
+  }) => getProducts(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getDemoProducts>>,
+    Awaited<ReturnType<typeof getProducts>>,
     TError,
     TData
   > & { queryKey: QueryKey };
 };
 
-export type GetDemoProductsQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getDemoProducts>>
+export type GetProductsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProducts>>
 >;
-export type GetDemoProductsQueryError = ErrorType<unknown>;
+export type GetProductsQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get demo products
+ * @summary Get products
  */
 
-export function useGetDemoProducts<
-  TData = Awaited<ReturnType<typeof getDemoProducts>>,
+export function useGetProducts<
+  TData = Awaited<ReturnType<typeof getProducts>>,
   TError = ErrorType<unknown>,
 >(
-  params?: GetDemoProductsParams,
+  params?: GetProductsParams,
   options?: {
     query?: UseQueryOptions<
-      Awaited<ReturnType<typeof getDemoProducts>>,
+      Awaited<ReturnType<typeof getProducts>>,
       TError,
       TData
     >;
     request?: SecondParameter<typeof customFetch>;
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetDemoProductsQueryOptions(params, options);
+  const queryOptions = getGetProductsQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -369,79 +368,3 @@ export const useCompareProducts = <
 > => {
   return useMutation(getCompareProductsMutationOptions(options));
 };
-
-/**
- * Returns prebuilt comparison scenarios for quick demo
- * @summary Get prebuilt demo scenarios
- */
-export const getGetDemoScenariosUrl = () => {
-  return `/api/demo-scenarios`;
-};
-
-export const getDemoScenarios = async (
-  options?: RequestInit,
-): Promise<DemoScenariosResponse> => {
-  return customFetch<DemoScenariosResponse>(getGetDemoScenariosUrl(), {
-    ...options,
-    method: "GET",
-  });
-};
-
-export const getGetDemoScenariosQueryKey = () => {
-  return [`/api/demo-scenarios`] as const;
-};
-
-export const getGetDemoScenariosQueryOptions = <
-  TData = Awaited<ReturnType<typeof getDemoScenarios>>,
-  TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getDemoScenarios>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetDemoScenariosQueryKey();
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof getDemoScenarios>>
-  > = ({ signal }) => getDemoScenarios({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getDemoScenarios>>,
-    TError,
-    TData
-  > & { queryKey: QueryKey };
-};
-
-export type GetDemoScenariosQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getDemoScenarios>>
->;
-export type GetDemoScenariosQueryError = ErrorType<unknown>;
-
-/**
- * @summary Get prebuilt demo scenarios
- */
-
-export function useGetDemoScenarios<
-  TData = Awaited<ReturnType<typeof getDemoScenarios>>,
-  TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getDemoScenarios>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetDemoScenariosQueryOptions(options);
-
-  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
-    queryKey: QueryKey;
-  };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}

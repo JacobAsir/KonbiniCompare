@@ -41,12 +41,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/CategoriesResponse"
 
-  /demo-products:
+  /products:
     get:
-      operationId: getDemoProducts
+      operationId: getProducts
       tags: [konbini]
-      summary: Get demo products
-      description: Returns seeded demo products, optionally filtered by category
+      summary: Get products
+      description: Returns products, optionally filtered by category
       parameters:
         - name: category
           in: query
@@ -55,11 +55,11 @@ paths:
             type: string
       responses:
         "200":
-          description: List of demo products
+          description: List of products
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DemoProductsResponse"
+                $ref: "#/components/schemas/ProductsResponse"
 
   /compare-products:
     post:
@@ -87,19 +87,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /demo-scenarios:
-    get:
-      operationId: getDemoScenarios
-      tags: [konbini]
-      summary: Get prebuilt demo scenarios
-      description: Returns prebuilt comparison scenarios for quick demo
-      responses:
-        "200":
-          description: List of demo scenarios
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DemoScenariosResponse"
 
 components:
   schemas:
@@ -267,7 +254,7 @@ components:
         - additives
         - tags
 
-    DemoProductsResponse:
+    ProductsResponse:
       type: object
       properties:
         products:
@@ -466,39 +453,3 @@ components:
         - comparisonTable
         - processingMode
 
-    DemoScenario:
-      type: object
-      properties:
-        id:
-          type: string
-        title:
-          type: string
-        titleJa:
-          type: string
-        description:
-          type: string
-        category:
-          type: string
-        productIds:
-          type: array
-          items:
-            type: string
-        preferences:
-          $ref: "#/components/schemas/UserPreferences"
-      required:
-        - id
-        - title
-        - titleJa
-        - description
-        - category
-        - productIds
-
-    DemoScenariosResponse:
-      type: object
-      properties:
-        scenarios:
-          type: array
-          items:
-            $ref: "#/components/schemas/DemoScenario"
-      required:
-        - scenarios

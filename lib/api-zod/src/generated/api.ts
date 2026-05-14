@@ -36,14 +36,14 @@ export const GetCategoriesResponse = zod.object({
 });
 
 /**
- * Returns seeded demo products, optionally filtered by category
- * @summary Get demo products
+ * Returns products, optionally filtered by category
+ * @summary Get products
  */
-export const GetDemoProductsQueryParams = zod.object({
+export const GetProductsQueryParams = zod.object({
   category: zod.coerce.string().optional(),
 });
 
-export const GetDemoProductsResponse = zod.object({
+export const GetProductsResponse = zod.object({
   products: zod.array(
     zod.object({
       id: zod.string(),
@@ -308,97 +308,4 @@ export const CompareProductsResponse = zod.object({
         .describe("0.0 to 1.0 — prefer low-sugar options"),
     })
     .optional(),
-});
-
-/**
- * Returns prebuilt comparison scenarios for quick demo
- * @summary Get prebuilt demo scenarios
- */
-export const getDemoScenariosResponseScenariosItemPreferencesBudgetSensitivityDefault = 0.5;
-export const getDemoScenariosResponseScenariosItemPreferencesNutritionPriorityDefault = 0.5;
-export const getDemoScenariosResponseScenariosItemPreferencesCaffeineSensitivityDefault = 0.3;
-export const getDemoScenariosResponseScenariosItemPreferencesIngredientSimplicityDefault = 0.3;
-export const getDemoScenariosResponseScenariosItemPreferencesValueForMoneyDefault = 0.5;
-export const getDemoScenariosResponseScenariosItemPreferencesConvenienceDefault = 0.3;
-export const getDemoScenariosResponseScenariosItemPreferencesSkinSensitivityDefault = 0.5;
-export const getDemoScenariosResponseScenariosItemPreferencesProteinPriorityDefault = 0.3;
-export const getDemoScenariosResponseScenariosItemPreferencesSugarAvoidanceDefault = 0.3;
-
-export const GetDemoScenariosResponse = zod.object({
-  scenarios: zod.array(
-    zod.object({
-      id: zod.string(),
-      title: zod.string(),
-      titleJa: zod.string(),
-      description: zod.string(),
-      category: zod.string(),
-      productIds: zod.array(zod.string()),
-      preferences: zod
-        .object({
-          budgetSensitivity: zod
-            .number()
-            .default(
-              getDemoScenariosResponseScenariosItemPreferencesBudgetSensitivityDefault,
-            )
-            .describe("0.0 to 1.0 — how important is price"),
-          nutritionPriority: zod
-            .number()
-            .default(
-              getDemoScenariosResponseScenariosItemPreferencesNutritionPriorityDefault,
-            )
-            .describe("0.0 to 1.0 — how important is nutritional quality"),
-          caffeineSensitivity: zod
-            .number()
-            .default(
-              getDemoScenariosResponseScenariosItemPreferencesCaffeineSensitivityDefault,
-            )
-            .describe(
-              "0.0 to 1.0 — how sensitive to caffeine (higher = prefer less caffeine)",
-            ),
-          allergenConcerns: zod
-            .array(zod.string())
-            .optional()
-            .describe("Allergens to flag (e.g. gluten, dairy, nuts)"),
-          ingredientSimplicity: zod
-            .number()
-            .default(
-              getDemoScenariosResponseScenariosItemPreferencesIngredientSimplicityDefault,
-            )
-            .describe("0.0 to 1.0 — prefer fewer\/simpler additives"),
-          valueForMoney: zod
-            .number()
-            .default(
-              getDemoScenariosResponseScenariosItemPreferencesValueForMoneyDefault,
-            )
-            .describe("0.0 to 1.0 — how important is volume\/weight per yen"),
-          convenience: zod
-            .number()
-            .default(
-              getDemoScenariosResponseScenariosItemPreferencesConvenienceDefault,
-            )
-            .describe("0.0 to 1.0 — prefer portable\/single-serve options"),
-          skinSensitivity: zod
-            .number()
-            .default(
-              getDemoScenariosResponseScenariosItemPreferencesSkinSensitivityDefault,
-            )
-            .describe(
-              "0.0 to 1.0 — prefer low-irritation skincare (skincare category only)",
-            ),
-          proteinPriority: zod
-            .number()
-            .default(
-              getDemoScenariosResponseScenariosItemPreferencesProteinPriorityDefault,
-            )
-            .describe("0.0 to 1.0 — how important is protein content"),
-          sugarAvoidance: zod
-            .number()
-            .default(
-              getDemoScenariosResponseScenariosItemPreferencesSugarAvoidanceDefault,
-            )
-            .describe("0.0 to 1.0 — prefer low-sugar options"),
-        })
-        .optional(),
-    }),
-  ),
 });
