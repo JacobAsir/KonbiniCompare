@@ -37,12 +37,12 @@ function App() {
       setBaseUrl(apiUrl);
       
       // Ping the backend to wake it up (Render Free Plan)
-      fetch(`${apiUrl}/api/konbini/categories`).catch(() => {
+      fetch(`${apiUrl}/api/categories`).catch(() => {
         // Ignore errors, we just want to trigger a wake-up
       });
     } else {
       // Fallback for local development or same-origin deployment
-      fetch("/api/konbini/categories").catch(() => {});
+      fetch("/api/categories").catch(() => {});
     }
   }, []);
 
