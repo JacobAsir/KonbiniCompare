@@ -43,9 +43,24 @@ function clamp01(v: number): number {
 }
 
 /**
- * Normalise an array of raw values so the best product gets 1.0 and the worst
- * gets 0.0 (min–max scaling). Returns null for each position that has null input.
- * higherIsBetter: true → higher raw value → higher score.
+ * Normalise an array of raw values against absolute targets for "common sense" scoring.
+ * higherIsBetter: true (e.g. Protein) → value >= targetMax gets 1.0, 0 gets 0.0.
+ * higherIsBetter: false (e.g. Sugar) → 0 gets 1.0, value >= targetMax gets 0.0.
+ */
+function absoluteNorm(
+  values: (number | null)[],
+  targetMax: number,
+  higherIsBetter: boolean
+): (number | null)[] {
+  return values.map((v) => {
+    if (v === null) return null;
+    const norm = clamp01(v / targetMax);
+    return higherIsBetter ? norm : 1 - norm;
+  });
+}
+
+/**
+ * Fallback to min-max scaling if no absolute targets are suitable.
  */
 function minMaxNorm(
   values: (number | null)[],
@@ -55,7 +70,12 @@ function minMaxNorm(
   if (present.length === 0) return values.map(() => null);
   const min = Math.min(...present);
   const max = Math.max(...present);
-  if (min === max) return values.map((v) => (v === null ? null : 1.0));
+  if (min === max) {
+    // If higher is better and they are all 0, it's a 0 score
+    if (higherIsBetter && max === 0) return values.map((v) => (v === null ? null : 0.0));
+    // If lower is better and they are all high, it's not a 1.0 score
+    return values.map((v) => (v === null ? null : 0.5));
+  }
   return values.map((v) => {
     if (v === null) return null;
     const norm = (v - min) / (max - min);
@@ -102,27 +122,33 @@ function scoreCaffeine(
 function scoreCalories(
   products: Product[]
 ): (number | null)[] {
-  return minMaxNorm(
+  // Target: 0 kcal = 1.0 score, 500+ kcal = 0.0 score
+  return absoluteNorm(
     products.map((p) => p.nutrition?.calories ?? null),
-    false // fewer calories → higher score
+    500,
+    false
   );
 }
 
 function scoreSugar(
   products: Product[]
 ): (number | null)[] {
-  return minMaxNorm(
+  // Target: 0g sugar = 1.0 score, 40g+ sugar = 0.0 score
+  return absoluteNorm(
     products.map((p) => p.nutrition?.sugar ?? null),
-    false // lower sugar → higher score
+    40,
+    false
   );
 }
 
 function scoreProtein(
   products: Product[]
 ): (number | null)[] {
-  return minMaxNorm(
+  // Target: 15g protein = 1.0 score, 0g = 0.0 score
+  return absoluteNorm(
     products.map((p) => p.nutrition?.protein ?? null),
-    true // higher protein → higher score
+    15,
+    true
   );
 }
 

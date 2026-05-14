@@ -103,6 +103,13 @@ export async function generateExplanation(
 
 The ranking below was produced by a DETERMINISTIC scoring engine — do NOT change the ranking. Your ONLY job is to write a brief, factual explanation of WHY these products ranked as they did, based solely on the data provided.
 
+IMPORTANT RULES:
+- Distinguish between "Score" (0-100%) and "Content" (grams/mg). 
+- A Score of 100% on a dimension like Protein means the product is the BEST in this set, but if the value is 0g, do NOT call it "High Protein". Say "No protein" or "Contains no protein".
+- Similarly for Sugar: a 100% Score means LOW sugar. Do NOT say "High Sugar" if the score is high.
+- If the calorie count is low (e.g. < 100), call it "Low calorie".
+- Do NOT invent nutritional facts. If data is missing (NaN/null), mention it as a data gap.
+
 Category: ${category}
 User preferences: ${prefsDesc}
 
@@ -111,13 +118,13 @@ ${rankedSummary}
 
 Write two paragraphs — one in Japanese, one in English — explaining:
 1. Why ${best.productName} (${bestProduct?.nameJa ?? ""}) is the top choice given the user's preferences
-2. Key trade-offs between the products the user should know about
+2. Key trade-offs between the products the user should know about (e.g. if one has much more sugar than the other)
 3. Any important cautions or data gaps
 
 Rules:
 - Base your explanation ONLY on the data above; do not invent facts
 - Keep each paragraph to 3–4 sentences
-- Be specific: mention actual values, not vague claims
+- Be specific: mention actual values (e.g. "contains 31g of sugar"), not just vague scores
 - Japanese first, then English
 - Separate with "---"
 - Do not include headers or labels`;
