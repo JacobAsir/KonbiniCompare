@@ -847,25 +847,69 @@ export function getProductsByCategory(category: string): Product[] {
   return PRODUCTS.filter((p) => p.category === category);
 }
 
+// Simple Levenshtein distance for fuzzy matching
+function getLevenshteinDistance(a: string, b: string): number {
+  const matrix = Array.from({ length: a.length + 1 }, () =>
+    Array.from({ length: b.length + 1 }, (_, i) => i)
+  );
+  for (let i = 0; i <= a.length; i++) matrix[i]![0] = i;
+
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[i]![j] = Math.min(
+        matrix[i - 1]![j]! + 1,
+        matrix[i]![j - 1]! + 1,
+        matrix[i - 1]![j - 1]! + cost
+      );
+    }
+  }
+  return matrix[a.length]![b.length]!;
+}
+
 export function searchProducts(query: string, limit = 10): Product[] {
+  const q = query.toLowerCase().trim();
   const terms = q.split(/\s+/).filter(Boolean);
   if (terms.length === 0) return [];
 
   return PRODUCTS
-    .filter((p) => {
-      const searchable = [
+    .map(p => {
+      const searchableWords = [
         p.name,
         p.nameJa ?? "",
         p.brand ?? "",
-        p.category,
-        p.store ?? "",
         ...p.tags,
-      ]
-        .join(" ")
-        .toLowerCase();
+      ].join(" ").toLowerCase().split(/\s+/).filter(Boolean);
+
+      // Score 1: Substring match (Very High Priority)
+      const hasAllTerms = terms.every(term => 
+        searchableWords.some(word => word.includes(term))
+      );
       
-      // All terms must be found in the searchable string
-      return terms.every(term => searchable.includes(term));
+      // Score 2: Fuzzy match (Typo tolerance)
+      let minDistance = Infinity;
+      if (!hasAllTerms) {
+        for (const term of terms) {
+          if (term.length < 3) continue; // Don't fuzzy match very short words
+          for (const word of searchableWords) {
+            if (word.length < 3) continue;
+            const distance = getLevenshteinDistance(term, word);
+            // Allow 1 typo for every 4 characters
+            if (distance <= Math.floor(term.length / 3)) {
+              minDistance = Math.min(minDistance, distance);
+            }
+          }
+        }
+      }
+
+      return { 
+        product: p, 
+        isMatch: hasAllTerms || minDistance !== Infinity,
+        score: hasAllTerms ? 0 : minDistance 
+      };
     })
+    .filter(res => res.isMatch)
+    .sort((a, b) => a.score - b.score)
+    .map(res => res.product)
     .slice(0, limit);
 }
