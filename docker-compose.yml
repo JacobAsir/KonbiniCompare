@@ -1,0 +1,20 @@
+services:
+  api-server:
+    build:
+      context: .
+      target: api-server
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    restart: always
+
+  frontend:
+    build:
+      context: .
+      target: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api-server
+    restart: always

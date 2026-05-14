@@ -1,0 +1,16 @@
+node_modules
+.git
+.vscode
+.env
+*.log
+dist
+build
+.replit
+replit.md
+PROJECT_STRUCTURE.md
+README.md
+artifacts/mockup-sandbox
+venv
+python_env
+.npmrc
+# pnpm-lock.yaml is needed for frozen-lockfile install
